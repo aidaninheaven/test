@@ -1,0 +1,110 @@
+import time
+import os
+
+class Node:
+    def __init__(self, data):
+        self.left = None
+        self.right = None
+        self.data = data
+
+    def insert(self, data):
+        if data < self.data:
+            if self.left is None:
+                self.left = Node(data)
+            else:
+                self.left.insert(data)
+        elif data > self.data:
+            if self.right is None:
+                self.right = Node(data)
+            else:
+                self.right.insert(data)
+
+    def inorder_path(self):
+        path = []
+        if self.left:
+            path.extend(self.left.inorder_path())
+        path.append(self.data)
+        if self.right:
+            path.extend(self.right.inorder_path())
+        return path
+
+# Create the BST
+root = Node(12)
+root.insert(6)
+root.insert(14)
+root.insert(3)
+root.insert(7)
+root.insert(13)
+root.insert(15)
+
+# Maze ASCII (each row is a line in the maze)
+maze = [
+    "+---+---+---+---+---+---+---+---+",
+    "|       |                       |",
+    "+   +---+   +---+---+   +---+   +",                        
+    "|   |           |   |   |       |",
+    "+   +   +---+   +   +---+   +---+",                              
+    "|       |   |   |               |",
+    "+---+   +   +---+   +---+   +---+",                              
+    "|       |   |       |   |   |   |",
+    "+   +   +   +   +   +   +   +   +",
+    "|   |       |       |   |   |   |",
+    "+   +   +   +---+---+   +   +   +",
+    "|   |   |                       |",
+    "+   +   +---+---+---+---+   +   +",
+    "|   |                   |   |   |",
+    "+   +   +---+---+   +   +   +   +",
+    "| X |           |   |       |   |",
+    "+---+---+---+---+---+---+---+---+"
+]
+
+# Map grid positions to (row, col) coordinates in the ASCII maze
+# Each maze cell is 4 characters wide and 2 lines high
+mazePos = {}
+for i in range(8):
+    for j in range(8):
+        label = f"{i}{j}"
+        row = i * 2 + 1
+        col = j * 4 + 2
+        mazePos[label] = (row, col)
+
+# Flattened list of labels in reading order
+labels = [f"{i}{j}" for i in range(8) for j in range(8)]
+
+# Get the in-order traversal path
+bst_path = root.inorder_path()
+
+# Map each BST node to a label in the maze (first N labels)
+position_map = {val: labels[i] for i, val in enumerate(bst_path)}
+
+# Helper to print the maze
+def print_maze(maze):
+    os.system('cls' if os.name == 'nt' else 'clear')
+    for line in maze:
+        print(line)
+    time.sleep(0.8)
+
+# Start micromouse at the first position
+old_row, old_col = mazePos[position_map[bst_path[0]]]
+maze[old_row] = maze[old_row][:old_col] + 'X' + maze[old_row][old_col+1:]
+
+# Show starting maze
+print_maze(maze)
+
+# Simulate movement
+for val in bst_path[1:]:
+    # Remove X from old position
+    maze[old_row] = maze[old_row][:old_col] + ' ' + maze[old_row][old_col+1:]
+
+    # Get new position
+    new_label = position_map[val]
+    new_row, new_col = mazePos[new_label]
+
+    # Place X at new position
+    maze[new_row] = maze[new_row][:new_col] + 'X' + maze[new_row][new_col+1:]
+
+    # Print maze
+    print_maze(maze)
+
+    # Update current position
+    old_row, old_col = new_row, new_col
